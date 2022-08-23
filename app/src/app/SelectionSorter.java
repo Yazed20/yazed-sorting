@@ -1,0 +1,147 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package app;
+
+
+import java.awt.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import javax.swing.*;
+
+public class SelectionSorter extends JPanel{
+    //variables for bar graphics
+    private final static int BAR_WIDTH = 30;
+    private final static int BAR_HEIGHT = 400;
+    private int[]list;
+  
+    private static JPanel mainPanel;
+
+    
+    private SelectionSorter(int[] list){
+        this.list = list;
+    }
+    
+    private void setItems(int[] list){
+        this.list = list;
+        repaint();
+    }
+    
+    private void sort(){
+        new SortWorker(list).execute();
+    }
+
+ 
+    
+    @Override
+    protected void paintComponent(Graphics g){
+        super.paintComponent(g);
+
+       
+        for(int i = 0; i < list.length; i++){
+            int x = i * BAR_WIDTH;
+            int y = getHeight() - list[i];
+
+           
+            g.setColor( Color.RED );
+            g.fillRect(x, y, BAR_WIDTH, list[i]);
+            g.setColor( Color.BLUE );
+            g.drawString("" + list[i], x, y);
+        }
+    }
+
+ 
+    @Override
+    public Dimension getPreferredSize(){
+        return new Dimension(list.length * BAR_WIDTH, BAR_HEIGHT + 20);
+    }
+
+
+    private class SortWorker extends SwingWorker<Void, int[]>{
+        private int[] list;
+
+        public SortWorker(int[] unsortedItems){
+            list = Arrays.copyOf(unsortedItems, unsortedItems.length);
+        }
+
+        //SelectionSort algorithm
+        @Override
+        protected Void doInBackground(){
+            int n = list.length;
+
+      
+            for(int i = 0; i < (n - 1); i++){
+               
+                int min = i;
+                for(int j = i+1; j < n; j++){
+                    if(list[j] < list[min]){
+                        min = j;
+                    }  
+                }
+
+             
+                int temp = list[min];
+                list[min] = list[i];
+                list[i] = temp;
+
+               
+                publish( Arrays.copyOf(list, list.length) );
+              
+                try { Thread.sleep(100); } catch (Exception e) {}
+            }
+            
+            Toolkit tk = Toolkit.getDefaultToolkit();
+            tk.beep();
+            return null;
+        }
+
+        @Override
+        protected void process(List<int[]> processList){
+            int[] list = processList.get(processList.size() - 1);
+            setItems( list );
+        }
+
+        @Override
+        protected void done() {}
+    }
+
+    private static int[]generateListNumbers(){
+      
+        int[] list = new int[20];
+
+
+        Random random = new Random();
+        for(int i = 0; i < list.length; i++){
+            list[i] = random.nextInt(SelectionSorter.BAR_HEIGHT);
+        }
+
+        return list;
+    }
+
+    public static JPanel runSelectionSort(){
+        SelectionSorter selectionSort = new SelectionSorter(SelectionSorter.generateListNumbers());
+
+        JLabel title = new JLabel("Selection Sort");
+        
+        JButton generate = new JButton("Generate Data");
+        generate.addActionListener((e)->selectionSort.setItems(SelectionSorter.generateListNumbers()));
+        JButton sort = new JButton("Sort Data");
+        sort.addActionListener((e) -> selectionSort.sort());
+
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.add(generate);
+        bottomPanel.add(sort);
+        
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.add(selectionSort, BorderLayout.CENTER);
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+        mainPanel.add(title, BorderLayout.NORTH);
+
+        return mainPanel;
+    }
+}
+//coded by Yazed ;/
